@@ -16,6 +16,7 @@ dependencies:
   path_provider: ^2.0.0
   archive: ^4.0.7 # <--- 이 부분을 업데이트했습니다.
   http: ^1.2.1 # Add this line (use the latest stable version)
+  go_router: ^13.2.5
 
   ultralytics_yolo:
     path: ../

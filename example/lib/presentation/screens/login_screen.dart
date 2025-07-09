@@ -1,10 +1,15 @@
-// C:\Users\302-1\Desktop\yolo-flutter-app\example\lib\presentation\screens\login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'home_screen.dart'; // 같은 폴더라면 이렇게
 
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String baseUrl; // ✅ baseUrl을 받기 위한 필드 추가
+
+  const LoginScreen({
+    super.key,
+    required this.baseUrl, // ✅ 생성자에 baseUrl 추가
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -18,7 +23,12 @@ class _LoginScreenState extends State<LoginScreen> {
     // 실제 로그인 검증 생략하고 바로 이동
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(
+        builder: (_) => HomeScreen(
+          baseUrl: widget.baseUrl, // ✅ HomeScreen으로 baseUrl 전달
+          userId: emailController.text, // 예시: 로그인 ID를 userId로 전달
+        ),
+      ),
     );
   }
 

@@ -1,4 +1,3 @@
-// C:\Users\302-1\Desktop\yolo-flutter-app0709\example\lib\presentation\screens\camera_inference_screen.dart
 import 'package:flutter/material.dart';
 import 'package:ultralytics_yolo/yolo.dart';
 import 'package:ultralytics_yolo/yolo_result.dart';
@@ -12,18 +11,16 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http; // Import for HTTP requests
 
-/// A screen that demonstrates real-time YOLO inference using the device camera.
-///
-/// This screen provides:
-/// - Live camera feed with YOLO object detection
-/// - Model selection (detect, segment, classify, pose, obb)
-/// - Adjustable thresholds (confidence, IoU, max detections)
-/// - Camera controls (flip, zoom)
-/// - Performance metrics (FPS)
 class CameraInferenceScreen extends StatefulWidget {
-  // userId를 받도록 생성자 추가
+  // userId와 baseUrl을 받도록 생성자 추가
   final String userId;
-  const CameraInferenceScreen({super.key, required this.userId});
+  final String baseUrl; // ✅ main.dart로부터 baseUrl을 받기 위한 필드 추가
+
+  const CameraInferenceScreen({
+    super.key,
+    required this.userId,
+    required this.baseUrl, // ✅ 생성자에 baseUrl 추가
+  });
 
   @override
   State<CameraInferenceScreen> createState() => _CameraInferenceScreenState();
@@ -53,10 +50,6 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   final bool _useController = true;
 
   late final ModelManager _modelManager;
-
-  // ⚠️ 중요: 백엔드 서버의 실제 IP 주소와 포트를 정확히 입력하세요.
-  final String _baseUrl = 'https://ab68d7cc1d67.ngrok-free.app'; // <-- 이 부분을 당신의 서버 IP로 변경하세요!
-
 
   @override
   void initState() {
@@ -101,12 +94,6 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
     });
   }
 
-  /// Called when new detection results are available
-  ///
-  /// Updates the UI with:
-  /// - Number of detections
-  /// - FPS calculation
-  /// - Debug information for first few detections
   void _onDetectionResults(List<YOLOResult> results) {
     print('🟦 onDetectionResults called: ${results.length}개');
     results.asMap().forEach((i, r) => print(' - $i: ${r.className} (${r.confidence})'));
@@ -161,9 +148,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
           _loadingMessage = 'Sending image to server...';
         });
 
-        // 백엔드 서버의 업로드 엔드포인트
-        // login_screen.dart에서 정의된 _baseUrl을 사용합니다.
-        final String serverUrl = '$_baseUrl/upload_image'; // <-- 올바른 엔드포인트 사용
+        final String serverUrl = '${widget.baseUrl}/upload_image'; // <-- 올바른 엔드포인트 사용
 
         var request = http.MultipartRequest('POST', Uri.parse(serverUrl))
           ..fields['user_id'] = widget.userId; // 👈 로그인된 사용자 ID를 필드로 추가
@@ -249,7 +234,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
                     _currentZoomLevel = zoomLevel;
                   });
                 }
-              },
+                },
             )
           else if (_isModelLoading)
             IgnorePointer(
