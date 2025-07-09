@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'camera_inference_screen.dart';
-import 'web_placeholder_screen.dart'; // 웹용 안내 화면
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   final String baseUrl;
@@ -20,22 +19,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   void goToNext(BuildContext context) {
     if (kIsWeb) {
-      // 웹에서는 안내 화면으로
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const WebPlaceholderScreen()),
-      );
+      context.go('/web');
     } else {
-      // 모바일에서는 YOLO 추론 화면으로
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CameraInferenceScreen(
-            userId: widget.userId, // ✅ LoginScreen에서 받은 userId 사용
-            baseUrl: widget.baseUrl, // ✅ LoginScreen에서 받은 baseUrl 사용
-          ),
-        ),
-      );
+      context.go('/camera', extra: {
+        'baseUrl': widget.baseUrl,
+        'userId': widget.userId,
+      });
     }
   }
 
@@ -44,11 +33,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('홈 화면')),
       body: Center(
-        child: Column( // Column 추가하여 userId 표시
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              '환영합니다, ${widget.userId}님!', // userId 표시
+              '환영합니다, ${widget.userId}님!',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
