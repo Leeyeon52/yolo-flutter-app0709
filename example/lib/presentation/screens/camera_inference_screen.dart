@@ -1,4 +1,4 @@
-//C:\Users\302-1\Desktop\yolo-flutter-app\example\lib\presentation\screens\camera_inference_screen.dart
+// C:\Users\302-1\Desktop\yolo-flutter-app0709\example\lib\presentation\screens\camera_inference_screen.dart
 import 'package:flutter/material.dart';
 import 'package:ultralytics_yolo/yolo.dart';
 import 'package:ultralytics_yolo/yolo_result.dart';
@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http; // Import for HTTP requests
 
 /// A screen that demonstrates real-time YOLO inference using the device camera.
 ///
@@ -20,7 +21,9 @@ import 'package:path_provider/path_provider.dart';
 /// - Camera controls (flip, zoom)
 /// - Performance metrics (FPS)
 class CameraInferenceScreen extends StatefulWidget {
-  const CameraInferenceScreen({super.key});
+  // userId를 받도록 생성자 추가
+  final String userId;
+  const CameraInferenceScreen({super.key, required this.userId});
 
   @override
   State<CameraInferenceScreen> createState() => _CameraInferenceScreenState();
@@ -37,7 +40,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   DateTime _lastFpsUpdate = DateTime.now();
 
   SliderType _activeSlider = SliderType.none;
-  ModelType _selectedModel = ModelType.detect;
+  ModelType _selectedModel = ModelType.segment; // Set initial model to segment
   bool _isModelLoading = false;
   String? _modelPath;
   String _loadingMessage = '';
@@ -50,6 +53,10 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   final bool _useController = true;
 
   late final ModelManager _modelManager;
+
+  // ⚠️ 중요: 백엔드 서버의 실제 IP 주소와 포트를 정확히 입력하세요.
+  final String _baseUrl = 'https://ab68d7cc1d67.ngrok-free.app'; // <-- 이 부분을 당신의 서버 IP로 변경하세요!
+
 
   @override
   void initState() {
@@ -103,41 +110,113 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   void _onDetectionResults(List<YOLOResult> results) {
     print('🟦 onDetectionResults called: ${results.length}개');
     results.asMap().forEach((i, r) => print(' - $i: ${r.className} (${r.confidence})'));
-  if (!mounted) return;
+    if (!mounted) return;
 
-  // Update FPS counter
-  _frameCount++;
-  final now = DateTime.now();
-  final elapsed = now.difference(_lastFpsUpdate).inMilliseconds;
-  if (elapsed >= 1000) {
-    _currentFps = _frameCount * 1000 / elapsed;
-    _frameCount = 0;
-    _lastFpsUpdate = now;
-    debugPrint('Calculated FPS: ${_currentFps.toStringAsFixed(1)}');
-  }
-
-  // Update the UI with the new count
-  setState(() {
-    _detectionCount = results.length;
-     // 분류(Classification) 모드일 때: top 뽑아서 사용!
-    if (_selectedModel.task == ModelType.classify) {
-      for (final r in results) {
-        debugPrint('${r.className} (${(r.confidence * 100).toStringAsFixed(1)}%)');
+    // Update FPS counter
+    _frameCount++;
+    final now = DateTime.now();
+    final elapsed = now.difference(_lastFpsUpdate).inMilliseconds;
+    if (elapsed >= 1000) {
+      _currentFps = _frameCount * 1000 / elapsed;
+      _frameCount = 0;
+      _lastFpsUpdate = now;
+      debugPrint('Calculated FPS: ${_currentFps.toStringAsFixed(1)}');
     }
-    // 분류 결과 3개까지
-    _classifications = results
-        .take(3)
-        .map((r) => r.confidence < 0.5
-          ? "알 수 없음"
-          : "${r.className} ${(r.confidence * 100).toStringAsFixed(1)}%")
-        .toList();
-  } else {
-    // detect/segment: 분류 정보 필요 없음
-    _classifications = [];
+
+    // Update the UI with the new count
+    setState(() {
+      _detectionCount = results.length;
+      // 분류(Classification) 모드일 때: top 뽑아서 사용!
+      if (_selectedModel.task == ModelType.classify) {
+        for (final r in results) {
+          debugPrint('${r.className} (${(r.confidence * 100).toStringAsFixed(1)}%)');
+        }
+        // 분류 결과 3개까지
+        _classifications = results
+            .take(3)
+            .map((r) => r.confidence < 0.5
+                ? "알 수 없음"
+                : "${r.className} ${(r.confidence * 100).toStringAsFixed(1)}%")
+            .toList();
+      } else {
+        // detect/segment: 분류 정보 필요 없음
+        _classifications = [];
+      }
+      print('_classifications: $_classifications'); // 👈 이 한 줄 추가!
+    });
   }
-  print('_classifications: $_classifications');  // 👈 이 한 줄 추가!
-});
-}
+
+  /// Captures the current camera frame and sends it to a server.
+  Future<void> _captureAndSendToServer() async {
+    try {
+      setState(() {
+        _loadingMessage = 'Capturing image...';
+        _isModelLoading = true; // Use this to show loading overlay
+      });
+
+      final Uint8List? imageData = await _yoloController.captureFrame();
+
+      if (imageData != null) {
+        setState(() {
+          _loadingMessage = 'Sending image to server...';
+        });
+
+        // 백엔드 서버의 업로드 엔드포인트
+        // login_screen.dart에서 정의된 _baseUrl을 사용합니다.
+        final String serverUrl = '$_baseUrl/upload_image'; // <-- 올바른 엔드포인트 사용
+
+        var request = http.MultipartRequest('POST', Uri.parse(serverUrl))
+          ..fields['user_id'] = widget.userId; // 👈 로그인된 사용자 ID를 필드로 추가
+
+        request.files.add(http.MultipartFile.fromBytes(
+          'image', // 백엔드에서 request.files['image']로 받을 키 이름
+          imageData,
+          filename: 'camera_capture.jpg', // 파일명 설정
+          // contentType: MediaType('image', 'jpeg'), // 선택 사항: 필요한 경우 콘텐츠 유형 지정
+        ));
+
+        var response = await request.send();
+
+        if (response.statusCode == 200) {
+          debugPrint('Image sent successfully!');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Image sent successfully!')),
+            );
+          }
+        } else {
+          final responseBody = await response.stream.bytesToString();
+          debugPrint('Failed to send image. Status: ${response.statusCode}, Body: $responseBody');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to send image: ${response.statusCode}')),
+            );
+          }
+        }
+      } else {
+        debugPrint('No image data captured.');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to capture image.')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error capturing or sending image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isModelLoading = false;
+          _loadingMessage = '';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +264,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
                         'assets/logo.png',
                         width: 120,
                         height: 120,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withAlpha(204), // Corrected alpha usage
                       ),
                       const SizedBox(height: 32),
                       // Loading message
@@ -245,24 +324,24 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: _classifications.map((txt) =>
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 24),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                    child: Text(
-                      txt,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      textAlign: TextAlign.center,
+                      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 24),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                      child: Text(
+                        txt,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
                 ).toList(),
               ),
             ),
@@ -275,8 +354,8 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Model selector
-                _buildModelSelector(),
+                // Model selector - REMOVED
+                // _buildModelSelector(),
                 SizedBox(height: isLandscape ? 8 : 12),
                 IgnorePointer(
                   child: Row(
@@ -326,7 +405,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
                     heightFactor: isLandscape ? 0.3 : 0.5,
                     child: Image.asset(
                       'assets/logo.png',
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: Colors.white.withAlpha(102), // Corrected alpha usage
                     ),
                   ),
                 ),
@@ -369,6 +448,8 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
                   _toggleSlider(SliderType.iou);
                 }),
                 SizedBox(height: isLandscape ? 16 : 40),
+                // NEW: Capture button
+                _buildCaptureButton(),
               ],
             ),
           ),
@@ -378,19 +459,19 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: isLandscape ? 40: 80,
+              bottom: isLandscape ? 40 : 80,
               child: Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: isLandscape ? 16 : 24,
                   vertical: isLandscape ? 8 : 12,
                 ),
-                color: Colors.black.withValues(alpha: 0.8),
+                color: Colors.black.withAlpha(204), // Corrected alpha usage
                 child: SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     activeTrackColor: Colors.yellow,
-                    inactiveTrackColor: Colors.white.withValues(alpha: 0.3),
+                    inactiveTrackColor: Colors.white.withAlpha(76), // Corrected alpha usage
                     thumbColor: Colors.yellow,
-                    overlayColor: Colors.yellow.withValues(alpha: 0.2),
+                    overlayColor: Colors.yellow.withAlpha(51), // Corrected alpha usage
                   ),
                   child: Slider(
                     value: _getSliderValue(),
@@ -414,7 +495,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
             right: isLandscape ? 8 : 16,
             child: CircleAvatar(
               radius: isLandscape ? 20 : 24,
-              backgroundColor: Colors.black.withValues(alpha: 0.5),
+              backgroundColor: Colors.black.withAlpha(127), // Corrected alpha usage
               child: IconButton(
                 icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
                 onPressed: () {
@@ -446,7 +527,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   Widget _buildIconButton(dynamic iconOrAsset, VoidCallback onPressed) {
     return CircleAvatar(
       radius: 24,
-      backgroundColor: Colors.black.withValues(alpha: 0.2),
+      backgroundColor: Colors.black.withAlpha(51), // Corrected alpha usage
       child: IconButton(
         icon: iconOrAsset is IconData
             ? Icon(iconOrAsset, color: Colors.white)
@@ -468,11 +549,20 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   Widget _buildCircleButton(String label, {required VoidCallback onPressed}) {
     return CircleAvatar(
       radius: 24,
-      backgroundColor: Colors.black.withValues(alpha: 0.2),
+      backgroundColor: Colors.black.withAlpha(51), // Corrected alpha usage
       child: TextButton(
         onPressed: onPressed,
         child: Text(label, style: const TextStyle(color: Colors.white)),
       ),
+    );
+  }
+
+  /// NEW: Builds the circular capture button
+  Widget _buildCaptureButton() {
+    return FloatingActionButton(
+      onPressed: _captureAndSendToServer,
+      backgroundColor: Colors.yellow,
+      child: const Icon(Icons.camera_alt, color: Colors.black),
     );
   }
 
@@ -493,7 +583,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
+        color: Colors.black.withAlpha(153), // Corrected alpha usage
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
@@ -548,34 +638,36 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   /// This method updates both the UI state and the YOLO view controller
   /// with the new threshold value.
   void _updateSliderValue(double value) {
-    switch (_activeSlider) {
-      case SliderType.numItems:
-        _numItemsThreshold = value.toInt();
-        if (_useController) {
-          _yoloController.setNumItemsThreshold(_numItemsThreshold);
-        } else {
-          _yoloViewKey.currentState?.setNumItemsThreshold(_numItemsThreshold);
-        }
-        break;
-      case SliderType.confidence:
-        _confidenceThreshold = value;
-        if (_useController) {
-          _yoloController.setConfidenceThreshold(value);
-        } else {
-          _yoloViewKey.currentState?.setConfidenceThreshold(value);
-        }
-        break;
-      case SliderType.iou:
-        _iouThreshold = value;
-        if (_useController) {
-          _yoloController.setIoUThreshold(value);
-        } else {
-          _yoloViewKey.currentState?.setIoUThreshold(value);
-        }
-        break;
-      default:
-        break;
-    }
+    setState(() {
+      switch (_activeSlider) {
+        case SliderType.numItems:
+          _numItemsThreshold = value.toInt();
+          if (_useController) {
+            _yoloController.setNumItemsThreshold(_numItemsThreshold);
+          } else {
+            _yoloViewKey.currentState?.setNumItemsThreshold(_numItemsThreshold);
+          }
+          break;
+        case SliderType.confidence:
+          _confidenceThreshold = value;
+          if (_useController) {
+            _yoloController.setConfidenceThreshold(value);
+          } else {
+            _yoloViewKey.currentState?.setConfidenceThreshold(value);
+          }
+          break;
+        case SliderType.iou:
+          _iouThreshold = value;
+          if (_useController) {
+            _yoloController.setIoUThreshold(value);
+          } else {
+            _yoloViewKey.currentState?.setIoUThreshold(value);
+          }
+          break;
+        default:
+          break;
+      }
+    });
   }
 
   /// Sets the camera zoom level
@@ -601,7 +693,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
       height: 36,
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
+        color: Colors.black.withAlpha(153), // Corrected alpha usage
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -639,81 +731,81 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   }
 
   String _getModelFileName(ModelType modelType) {
-  switch (modelType) {
-    case ModelType.detect:
-      return 'best_8n_float16.tflite';
-    case ModelType.segment:
-      return 'dental_best_float16.tflite';
-    case ModelType.classify:
-      return 'yolo11n-cls.tflite';
-      
-    default:
-      return 'pill_best_float16.tflite';
+    switch (modelType) {
+      case ModelType.detect:
+        return 'best_8n_float16.tflite';
+      case ModelType.segment:
+        return 'dental_best_float16.tflite'; // This will be the only one used
+      case ModelType.classify:
+        return 'yolo11n-cls.tflite';
+
+      default:
+        return 'pill_best_float16.tflite';
+    }
   }
-}
 
   Future<void> _loadModelForPlatform() async {
-  setState(() {
-    _isModelLoading = true;
-    _loadingMessage = 'Loading ${_selectedModel.modelName} model...';
-    _downloadProgress = 0.0;
-    _detectionCount = 0;
-    _currentFps = 0.0;
-    _frameCount = 0;
-    _lastFpsUpdate = DateTime.now();
-  });
+    setState(() {
+      _isModelLoading = true;
+      _loadingMessage = 'Loading ${_selectedModel.modelName} model...';
+      _downloadProgress = 0.0;
+      _detectionCount = 0;
+      _currentFps = 0.0;
+      _frameCount = 0;
+      _lastFpsUpdate = DateTime.now();
+    });
 
-  try {
-    final fileName = _getModelFileName(_selectedModel);
-    final ByteData data = await rootBundle.load('assets/models/$fileName');
+    try {
+      final fileName = _getModelFileName(_selectedModel);
+      final ByteData data = await rootBundle.load('assets/models/$fileName');
 
-    final Directory appDir = await getApplicationDocumentsDirectory();
-    final Directory modelDir = Directory('${appDir.path}/assets/models');
-    if (!await modelDir.exists()) {
-      await modelDir.create(recursive: true);
-    }
+      final Directory appDir = await getApplicationDocumentsDirectory();
+      final Directory modelDir = Directory('${appDir.path}/assets/models');
+      if (!await modelDir.exists()) {
+        await modelDir.create(recursive: true);
+      }
 
-    final File file = File('${modelDir.path}/$fileName');
-    if (!await file.exists()) {
-      await file.writeAsBytes(data.buffer.asUint8List());
-    }
+      final File file = File('${modelDir.path}/$fileName');
+      if (!await file.exists()) {
+        await file.writeAsBytes(data.buffer.asUint8List());
+      }
 
-    final modelPath = file.path;
+      final modelPath = file.path;
 
-    if (mounted) {
-      setState(() {
-        _modelPath = modelPath;
-        _isModelLoading = false;
-        _loadingMessage = '';
-        _downloadProgress = 0.0;
-      });
+      if (mounted) {
+        setState(() {
+          _modelPath = modelPath;
+          _isModelLoading = false;
+          _loadingMessage = '';
+          _downloadProgress = 0.0;
+        });
 
-      debugPrint('CameraInferenceScreen: Model path set to: $modelPath');
-    }
-  } catch (e) {
-    debugPrint('Error loading model: $e');
-    if (mounted) {
-      setState(() {
-        _isModelLoading = false;
-        _loadingMessage = 'Failed to load model';
-        _downloadProgress = 0.0;
-      });
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Model Loading Error'),
-          content: Text(
-            'Failed to load ${_selectedModel.modelName} model: ${e.toString()}',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+        debugPrint('CameraInferenceScreen: Model path set to: $modelPath');
+      }
+    } catch (e) {
+      debugPrint('Error loading model: $e');
+      if (mounted) {
+        setState(() {
+          _isModelLoading = false;
+          _loadingMessage = 'Failed to load model';
+          _downloadProgress = 0.0;
+        });
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Model Loading Error'),
+            content: Text(
+              'Failed to load ${_selectedModel.modelName} model: ${e.toString()}',
             ),
-          ],
-        ),
-      );
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
-}
 }

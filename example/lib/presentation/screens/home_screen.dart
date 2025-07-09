@@ -18,7 +18,9 @@ class HomeScreen extends StatelessWidget {
       // 모바일에서는 YOLO 추론 화면으로
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const CameraInferenceScreen()),
+        MaterialPageRoute(
+          builder: (_) => CameraInferenceScreen(userId: "test_user"),
+        ),
       );
     }
   }
