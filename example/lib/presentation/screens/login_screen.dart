@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '/presentation/viewmodel/auth_viewmodel.dart';
+import '/presentation/viewmodel/userinfo_viewmodel.dart';
 
 class LoginScreen extends StatefulWidget {
   final String baseUrl;
@@ -17,15 +20,32 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  void login() {
-    // 실제 로그인 검증 생략하고 바로 이동
-    final userId = emailController.text.trim();
+  // 로그인 함수
+  Future<void> login() async {
+    final authViewModel = context.read<AuthViewModel>();
+    final userInfoViewModel = context.read<UserInfoViewModel>();
 
-    if (userId.isNotEmpty) {
-      context.go('/home', extra: {
-        'baseUrl': widget.baseUrl,
-        'userId': userId,
-      });
+    final id = emailController.text.trim();
+    final pw = passwordController.text.trim();
+
+    if (id.isEmpty || pw.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('아이디와 비밀번호를 입력해주세요')),
+      );
+      return;
+    }
+
+    // 로그인 요청
+    final user = await authViewModel.loginUser(id, pw);
+
+    if (user != null) {
+      userInfoViewModel.loadUser(user); // ✅ 유저 정보 저장
+      context.go('/home');
+    } else {
+      final error = authViewModel.errorMessage ?? '로그인 실패';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
     }
   }
 
@@ -40,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: '이메일'),
+              decoration: const InputDecoration(labelText: '아이디'),
             ),
             TextField(
               controller: passwordController,
@@ -52,10 +72,10 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: login,
               child: const Text('로그인'),
             ),
-            const SizedBox(height: 8), // 여백
+            const SizedBox(height: 8),
             TextButton(
               onPressed: () {
-                context.go('/register'); // ✅ 회원가입으로 이동
+                context.go('/register');
               },
               child: const Text('회원가입 하기'),
             ),

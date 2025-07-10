@@ -23,7 +23,7 @@ class AuthViewModel with ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await http.get(Uri.parse('$_baseUrl/doctor/exists?email=$userId'));
+      final res = await http.get(Uri.parse('$_baseUrl/auth/check-username?username=$userId'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         return data['exists'] == true;
@@ -46,7 +46,7 @@ class AuthViewModel with ChangeNotifier {
 
     try {
       final res = await http.post(
-        Uri.parse('$_baseUrl/doctor/register'),
+        Uri.parse('$_baseUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(userData),
       );
@@ -68,9 +68,9 @@ class AuthViewModel with ChangeNotifier {
     _errorMessage = null;
     try {
       final res = await http.post(
-        Uri.parse('$_baseUrl/doctor/login'),
+        Uri.parse('$_baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+        body: jsonEncode({'username': email, 'password': password}),
       );
 
       if (res.statusCode == 200) {
@@ -97,9 +97,9 @@ class AuthViewModel with ChangeNotifier {
   Future<String?> deleteUser(String email, String password) async {
     try {
       final res = await http.delete(
-        Uri.parse('$_baseUrl/doctor/delete_account'),
+        Uri.parse('$_baseUrl/auth/delete_account'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+        body: jsonEncode({'username': email, 'password': password}),
       );
 
       if (res.statusCode == 200) {

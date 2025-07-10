@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // GoRouter 임포트 확인
 import 'package:provider/provider.dart';
-
+import 'presentation/viewmodel/userinfo_viewmodel.dart'; // 🔁 이 import도 필요
 import 'presentation/viewmodel/auth_viewmodel.dart';
 import 'services/router.dart'; // router.dart 파일 임포트
 
 void main() {
   // 앱 전체에서 사용할 기본 URL을 정의합니다.
-  const String globalBaseUrl = "https://8df37fb68c32.ngrok-free.app";
+  const String globalBaseUrl = "http://192.168.0.19:5000/api";
 
   // MultiProvider를 사용하여 앱 전체에서 AuthViewModel을 사용할 수 있도록 설정합니다.
   runApp(
@@ -15,6 +15,9 @@ void main() {
       providers: [
         ChangeNotifierProvider(
           create: (_) => AuthViewModel(baseUrl: globalBaseUrl),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => UserInfoViewModel(), // ✅ 추가
         ),
       ],
       // YOLOExampleApp을 실행하며 baseUrl을 전달합니다.
