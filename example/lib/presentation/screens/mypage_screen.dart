@@ -82,15 +82,18 @@ class MyPageScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () async {
-                final userId = userInfoViewModel.user!.username;
+                // ✅ username 대신 registerId 사용
+                final registerId = userInfoViewModel.user!.registerId;
                 final password = passwordController.text;
+                final role = userInfoViewModel.user!.role; // 역할도 함께 전달
 
                 if (password.isEmpty) {
                   _showSnack(dialogContext, '비밀번호를 입력해주세요.');
                   return;
                 }
 
-                final error = await authViewModel.deleteUser(userId, password);
+                // deleteUser 함수 호출 시 registerId와 role을 함께 전달
+                final error = await authViewModel.deleteUser(registerId, password, role);
 
                 if (error == null) {
                   Navigator.of(dialogContext).pop(true);
@@ -172,7 +175,8 @@ class MyPageScreen extends StatelessWidget {
                         const Icon(Icons.email, color: Colors.grey, size: 20),
                         const SizedBox(width: 10),
                         Text(
-                          '아이디: ${user?.username ?? '로그인 필요'}',
+                          // ✅ username 대신 registerId 사용
+                          '아이디: ${user?.registerId ?? '로그인 필요'}',
                           style: const TextStyle(fontSize: 17, color: Colors.black87),
                         ),
                       ],

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '/presentation/viewmodel/auth_viewmodel.dart';
-import '/presentation/viewmodel/userinfo_viewmodel.dart';
+import '/presentation/viewmodel/auth_viewmodel.dart'; // ✅ DAuthViewModel 대신 AuthViewModel 임포트
+import '/presentation/viewmodel/userinfo_viewmodel.dart'; // UserInfoViewModel은 그대로 유지
 
 class LoginScreen extends StatefulWidget {
   final String baseUrl;
@@ -17,38 +17,53 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController registerIdController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  String _selectedRole = 'P'; // 기본값: 환자(P)
+  String _selectedRole = 'P';
 
   Future<void> login() async {
+    print('로그인 버튼 클릭됨'); // ✅ 디버깅용 로그
+    // ✅ AuthViewModel 사용
     final authViewModel = context.read<AuthViewModel>();
     final userInfoViewModel = context.read<UserInfoViewModel>();
 
-    final id = emailController.text.trim();
-    final pw = passwordController.text.trim();
+    final registerId = registerIdController.text.trim();
+    final password = passwordController.text.trim();
 
-    if (id.isEmpty || pw.isEmpty) {
+    if (registerId.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('아이디와 비밀번호를 입력해주세요')),
       );
+      print('아이디 또는 비밀번호 누락'); // ✅ 디버깅용 로그
       return;
     }
 
-    final user = await authViewModel.loginUser(id, pw, _selectedRole); // ✅ role 전달
+    print('로그인 시도: ID=$registerId, Role=$_selectedRole'); // ✅ 디버깅용 로그
+    try {
+      final user = await authViewModel.loginUser(registerId, password, _selectedRole);
+      print('loginUser 결과: $user'); // ✅ 디버깅용 로그
 
-    if (user != null) {
-      userInfoViewModel.loadUser(user);
-      if (user.role == 'D') {
-        context.go('/d_home'); // ✅ 의사
+      if (user != null) {
+        userInfoViewModel.loadUser(user);
+        print('로그인 성공. 사용자 역할: ${user.role}'); // ✅ 디버깅용 로그
+        if (user.role == 'D') {
+          context.go('/d_home');
+          print('의사 홈으로 이동: /d_home'); // ✅ 디버깅용 로그
+        } else {
+          context.go('/home', extra: {'userId': user.id});
+          print('환자 홈으로 이동: /home, userId: ${user.id}'); // ✅ 디버깅용 로그
         }
-      else {
-        context.go('/home', extra: {'userId': user.id});
+      } else {
+        final error = authViewModel.errorMessage ?? '로그인 실패';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
+        print('로그인 실패: $error'); // ✅ 디버깅용 로그
       }
-    } else {
-      final error = authViewModel.errorMessage ?? '로그인 실패';
+    } catch (e) {
+      print('로그인 중 예외 발생: $e'); // ✅ 예외 발생 시 로그
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text('로그인 처리 중 오류 발생: ${e.toString()}')),
       );
     }
   }
@@ -86,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: emailController,
+              controller: registerIdController,
               decoration: const InputDecoration(labelText: '아이디'),
             ),
             TextField(

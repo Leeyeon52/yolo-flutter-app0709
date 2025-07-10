@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 // 필요한 화면들을 임포트합니다.
 // 실제 파일 경로에 맞게 수정해주세요.
-import '/presentation/screens/d_home_screen.dart'; // ✅ 추가
+import '../presentation/screens/doctor/d_home_screen.dart'; // ✅ 추가
 import '/presentation/screens/main_scaffold.dart';
 import '/presentation/screens/login_screen.dart';
 import '/presentation/screens/register_screen.dart';
