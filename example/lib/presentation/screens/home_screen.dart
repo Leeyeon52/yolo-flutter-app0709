@@ -99,7 +99,15 @@ class HomeScreen extends StatelessWidget {
                     context,
                     label: '실시간 예측하기',
                     icon: Icons.videocam,
-                    onPressed: kIsWeb ? null : () => context.go('/diagnosis/realtime'),
+                    onPressed: kIsWeb
+                      ? null
+                      : () => GoRouter.of(context).push(
+                        '/diagnosis/realtime',
+                        extra: {
+                          'baseUrl': baseUrl, // ✅ 전달!
+                          'userId': userId,   // ✅ 전달!
+                        },
+                      ),
                     buttonColor: kIsWeb ? Colors.grey[400]! : Colors.greenAccent, // 웹 비활성화 시 색상 변경
                     textColor: kIsWeb ? Colors.black54 : Colors.white, // 텍스트 색상 변경
                     iconColor: kIsWeb ? Colors.black54 : Colors.white, // 아이콘 색상 변경
