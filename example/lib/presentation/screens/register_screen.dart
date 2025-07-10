@@ -20,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _userIdController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  String _selectedRole = 'P'; // ✅ 기본값: 환자
 
   bool _isDuplicate = true;
   bool _isIdChecked = false;
@@ -89,6 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'username': _userIdController.text.trim(),
       'password': _passwordController.text.trim(),
       'email': 'temp_email_${DateTime.now().millisecondsSinceEpoch}@example.com',
+      'role': _selectedRole, // ✅ 의사/환자 역할 포함
     };
 
     final viewModel = context.read<AuthViewModel>();
@@ -117,6 +119,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/login'),
         ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) => setState(() => _selectedRole = value),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'P', child: Text('환자')),
+              const PopupMenuItem(value: 'D', child: Text('의사')),
+            ],
+            icon: const Icon(Icons.account_circle),
+            tooltip: '사용자 유형 선택',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

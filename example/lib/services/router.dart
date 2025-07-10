@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 // 필요한 화면들을 임포트합니다.
 // 실제 파일 경로에 맞게 수정해주세요.
+import '/presentation/screens/d_home_screen.dart'; // ✅ 추가
 import '/presentation/screens/main_scaffold.dart';
 import '/presentation/screens/login_screen.dart';
 import '/presentation/screens/register_screen.dart';
@@ -34,6 +35,10 @@ GoRouter createRouter(String baseUrl) {
       GoRoute(
         path: '/web', // 웹 전용 플레이스홀더 화면 (하단 탭 바 없음)
         builder: (context, state) => const WebPlaceholderScreen(),
+      ),
+      GoRoute(
+        path: '/d_home',
+        builder: (context, state) => const DoctorHomeScreen(),
       ),
 
       // ShellRoute를 사용하여 BottomNavigationBar를 포함하는 공통 레이아웃을 정의합니다.

@@ -64,13 +64,13 @@ class AuthViewModel with ChangeNotifier {
     }
   }
 
-  Future<User?> loginUser(String email, String password) async {
+  Future<User?> loginUser(String email, String password, String role) async {
     _errorMessage = null;
     try {
       final res = await http.post(
         Uri.parse('$_baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': email, 'password': password}),
+        body: jsonEncode({'username': email, 'password': password, 'role': role}), // ✅ role 포함
       );
 
       if (res.statusCode == 200) {

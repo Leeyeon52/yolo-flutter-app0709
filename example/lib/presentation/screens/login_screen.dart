@@ -19,8 +19,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  String _selectedRole = 'P'; // 기본값: 환자(P)
 
-  // 로그인 함수
   Future<void> login() async {
     final authViewModel = context.read<AuthViewModel>();
     final userInfoViewModel = context.read<UserInfoViewModel>();
@@ -35,12 +35,16 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // 로그인 요청
-    final user = await authViewModel.loginUser(id, pw);
+    final user = await authViewModel.loginUser(id, pw, _selectedRole); // ✅ role 전달
 
     if (user != null) {
-      userInfoViewModel.loadUser(user); // ✅ 유저 정보 저장
-      context.go('/home');
+      userInfoViewModel.loadUser(user);
+      if (user.role == 'D') {
+        context.go('/d_home'); // ✅ 의사
+        }
+      else {
+        context.go('/home', extra: {'userId': user.id});
+      }
     } else {
       final error = authViewModel.errorMessage ?? '로그인 실패';
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,6 +62,29 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Row(
+              children: [
+                const Text('사용자 유형:', style: TextStyle(fontSize: 16)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: RadioListTile<String>(
+                    title: const Text('환자'),
+                    value: 'P',
+                    groupValue: _selectedRole,
+                    onChanged: (value) => setState(() => _selectedRole = value!),
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<String>(
+                    title: const Text('의사'),
+                    value: 'D',
+                    groupValue: _selectedRole,
+                    onChanged: (value) => setState(() => _selectedRole = value!),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: '아이디'),
@@ -74,9 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () {
-                context.go('/register');
-              },
+              onPressed: () => context.go('/register'),
               child: const Text('회원가입 하기'),
             ),
           ],
