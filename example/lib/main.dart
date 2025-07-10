@@ -7,7 +7,7 @@ import 'services/router.dart'; // router.dart 파일 임포트
 
 void main() {
   // 앱 전체에서 사용할 기본 URL을 정의합니다.
-  const String globalBaseUrl = "https://d9988bfda490.ngrok-free.app";
+  const String globalBaseUrl = "https://8df37fb68c32.ngrok-free.app";
 
   // MultiProvider를 사용하여 앱 전체에서 AuthViewModel을 사용할 수 있도록 설정합니다.
   runApp(
