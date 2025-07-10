@@ -17,7 +17,7 @@ import '/presentation/screens/mypage_screen.dart'; // 이 파일은 직접 생�
 import '/presentation/screens/upload_screen.dart'; // 사진으로 예측하기 화면
 import '/presentation/screens/history_screen.dart'; // 이전결과 보기 화면
 import '/presentation/screens/clinics_screen.dart'; // 주변 치과 화면
-// import 'package:example/presentation/screens/result_screen.dart'; // 진단 결과 화면 (필요시)
+// import '/presentation/screens/result_screen.dart'; // 진단 결과 화면 (필요시)
 
 GoRouter createRouter(String baseUrl) {
   return GoRouter(
@@ -124,35 +124,3 @@ GoRouter createRouter(String baseUrl) {
     ],
   );
 }
-
-// 중요: 위에 임포트된 모든 화면 파일들이 실제로 프로젝트에 존재해야 합니다.
-// 만약 존재하지 않는다면, 아래와 같이 간단한 더미 위젯으로 파일을 생성하여 오류를 방지할 수 있습니다.
-/*
-
-// presentation/screens/upload_screen.dart
-import 'package:flutter/material.dart';
-class UploadScreen extends StatelessWidget {
-  const UploadScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('사진으로 예측하기')),
-      body: const Center(child: Text('사진 업로드 기능 구현 예정')),
-    );
-  }
-}
-
-
-// presentation/screens/clinics_screen.dart
-import 'package:flutter/material.dart';
-class ClinicsScreen extends StatelessWidget {
-  const ClinicsScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('주변 치과')),
-      body: const Center(child: Text('주변 치과 지도 및 목록')),
-    );
-  }
-}
-*/
