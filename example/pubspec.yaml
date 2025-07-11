@@ -39,7 +39,7 @@ flutter:
     - assets/models/
     - assets/logo.png
     - assets/applogo.png
-    - assets/models/dental_best_float16.tflite
+    - assets/models/dental_best_float32.tflite
 
 flutter_launcher_icons:
   android: true

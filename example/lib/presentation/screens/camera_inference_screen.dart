@@ -759,7 +759,7 @@ class CameraInferenceScreenState extends State<CameraInferenceScreen> {
       case ModelType.detect:
         return 'best_8n_float16.tflite';
       case ModelType.segment:
-        return 'dental_best_float16.tflite'; // 이 모델만 사용될 것
+        return 'dental_best_float32.tflite'; // 이 모델만 사용될 것
       case ModelType.classify:
         return 'yolo11n-cls.tflite';
       case ModelType.pose: // pose 모델 추가 (만약 있다면)
