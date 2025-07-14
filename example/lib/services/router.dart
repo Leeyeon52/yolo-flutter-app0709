@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-// ✅ 필요한 화면들 임포트
-import '/presentation/screens/doctor/d_home_screen.dart';
-import '/presentation/screens/doctor/d_inference_result_screen.dart';
-import '/presentation/screens/main_scaffold.dart';
+// 화면 import
 import '/presentation/screens/login_screen.dart';
 import '/presentation/screens/register_screen.dart';
-import '/presentation/screens/home_screen.dart';
-import '/presentation/screens/camera_inference_screen.dart';
 import '/presentation/screens/web_placeholder_screen.dart';
 
-// 하단 탭 바 화면들
+import '/presentation/screens/main_scaffold.dart';
+
+import '/presentation/screens/home_screen.dart';
 import '/presentation/screens/chatbot_screen.dart';
 import '/presentation/screens/mypage_screen.dart';
 import '/presentation/screens/upload_screen.dart';
 import '/presentation/screens/history_screen.dart';
 import '/presentation/screens/clinics_screen.dart';
+import '/presentation/screens/camera_inference_screen.dart';
+
+import '/presentation/screens/doctor/d_home_screen.dart';
+import '/presentation/screens/doctor/d_alert_list_screen.dart'; // 🆕
+
+// 의사 추가 화면 import
+import '/presentation/screens/doctor/d_reservation_screen.dart';
+import '/presentation/screens/doctor/d_result_screen.dart';
+import '/presentation/screens/doctor/d_calendar_screen.dart';
+import '/presentation/screens/doctor/d_patient_list_screen.dart';
 
 GoRouter createRouter(String baseUrl) {
   return GoRouter(
@@ -34,14 +41,56 @@ GoRouter createRouter(String baseUrl) {
         path: '/web',
         builder: (context, state) => const WebPlaceholderScreen(),
       ),
+
+      // ✅ 의사 홈 (기본으로 알림 리스트 포함)
       GoRoute(
         path: '/d_home',
-        builder: (context, state) {
-          final passedBaseUrl = state.extra as String? ?? baseUrl;
-          return DoctorHomeScreen(baseUrl: passedBaseUrl); // ✅ baseUrl 전달
-        },
-        routes: [],
+        builder: (context, state) => const DAlertListScreen(),
       ),
+
+      // 의사용 추가 라우트
+      GoRoute(
+        path: '/d_reservations',
+        builder: (context, state) {
+          final extraData = state.extra as Map<String, dynamic>? ?? {};
+          return DoctorReservationScreen(
+            userId: extraData['userId'] ?? 'guest',
+            baseUrl: extraData['baseUrl'] ?? baseUrl,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/d_results',
+        builder: (context, state) {
+          final extraData = state.extra as Map<String, dynamic>? ?? {};
+          return DoctorResultScreen(
+            userId: extraData['userId'] ?? 'guest',
+            baseUrl: extraData['baseUrl'] ?? baseUrl,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/d_calendar',
+        builder: (context, state) {
+          final extraData = state.extra as Map<String, dynamic>? ?? {};
+          return DoctorCalendarScreen(
+            userId: extraData['userId'] ?? 'guest',
+            baseUrl: extraData['baseUrl'] ?? baseUrl,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/d_patients',
+        builder: (context, state) {
+          final extraData = state.extra as Map<String, dynamic>? ?? {};
+          return DoctorPatientListScreen(
+            userId: extraData['userId'] ?? 'guest',
+            baseUrl: extraData['baseUrl'] ?? baseUrl,
+          );
+        },
+      ),
+
+      // ✅ 하단 탭 바 있는 일반 사용자용 ShellRoute
       ShellRoute(
         builder: (context, state, child) {
           return MainScaffold(
@@ -57,8 +106,8 @@ GoRouter createRouter(String baseUrl) {
           GoRoute(
             path: '/home',
             builder: (context, state) {
-              final authViewModel = state.extra as Map<String, dynamic>?;
-              final userId = authViewModel?['userId'] ?? 'guest';
+              final authViewModel = state.extra as Map<String, dynamic>? ?? {};
+              final userId = authViewModel['userId'] ?? 'guest';
               return HomeScreen(baseUrl: baseUrl, userId: userId);
             },
           ),
@@ -70,7 +119,7 @@ GoRouter createRouter(String baseUrl) {
             path: '/upload',
             builder: (context, state) {
               final passedBaseUrl = state.extra as String? ?? baseUrl;
-              return UploadScreen(baseUrl: passedBaseUrl); // ✅ 수정됨
+              return UploadScreen(baseUrl: passedBaseUrl);
             },
           ),
           GoRoute(
@@ -87,9 +136,9 @@ GoRouter createRouter(String baseUrl) {
             path: '/history',
             builder: (context, state) {
               final passedBaseUrl = state.extra as String? ?? baseUrl;
-              return HistoryScreen(baseUrl: passedBaseUrl); // ✅ baseUrl 전달
+              return HistoryScreen(baseUrl: passedBaseUrl);
             },
-            ),
+          ),
           GoRoute(
             path: '/clinics',
             builder: (context, state) => const ClinicsScreen(),

@@ -2,34 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'presentation/viewmodel/userinfo_viewmodel.dart';
 import 'services/router.dart';
-import '/presentation/screens/doctor/d_home_screen.dart'; // d_home_screen.dart 임포트
-import '/presentation/viewmodel/doctor/d_consultation_record_viewmodel.dart'; // ✅ 추가
-import '/presentation/viewmodel/auth_viewmodel.dart';
-import '/presentation/viewmodel/doctor/d_patient_viewmodel.dart';
+
+import 'presentation/viewmodel/auth_viewmodel.dart';
+import 'presentation/viewmodel/userinfo_viewmodel.dart';
+import 'presentation/viewmodel/doctor/d_consultation_record_viewmodel.dart';
+import 'presentation/viewmodel/doctor/d_patient_viewmodel.dart';
+import 'presentation/viewmodel/doctor/d_alert_viewmodel.dart'; // 🆕
 
 void main() {
-  const String globalBaseUrl = "http://192.168.0.19:5000/api";
+  const String globalBaseUrl = "http://172.20.48.1:5000/api";
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthViewModel(baseUrl: globalBaseUrl),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => UserInfoViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => DoctorDashboardViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => DPatientViewModel(baseUrl: globalBaseUrl),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ConsultationRecordViewModel(baseUrl: globalBaseUrl),
-        ),
+        ChangeNotifierProvider(create: (_) => AuthViewModel(baseUrl: globalBaseUrl)),
+        ChangeNotifierProvider(create: (_) => UserInfoViewModel()),
+        ChangeNotifierProvider(create: (_) => DPatientViewModel(baseUrl: globalBaseUrl)),
+        ChangeNotifierProvider(create: (_) => ConsultationRecordViewModel(baseUrl: globalBaseUrl)),
+        ChangeNotifierProvider(create: (_) => DAlertViewModel()), // 🆕 비대면 알림 추가
       ],
       child: YOLOExampleApp(baseUrl: globalBaseUrl),
     ),
@@ -44,14 +35,12 @@ class YOLOExampleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'YOLO Plugin Example',
+      title: 'Tooth AI Example',
       debugShowCheckedModeBanner: false,
       routerConfig: createRouter(baseUrl),
       theme: ThemeData(
-        primaryColor: const Color(0xFF42A5F5),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF42A5F5),
-        ),
+        primarySwatch: Colors.lightBlue,
+        scaffoldBackgroundColor: Colors.white,
       ),
     );
   }
