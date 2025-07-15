@@ -17,10 +17,12 @@ class AppDrawer extends StatelessWidget {
         children: [
           const DrawerHeader(
             decoration: BoxDecoration(color: Color(0xFF42A5F5)),
-            alignment: Alignment.bottomLeft,
-            child: Text(
-              'TOOTH AI 닥터 메뉴',
-              style: TextStyle(color: Colors.white, fontSize: 22),
+            child: Align(
+              alignment: Alignment.bottomLeft, // ✅ alignment를 여기서 사용
+              child: Text(
+                'TOOTH AI 닥터 메뉴',
+                style: TextStyle(color: Colors.white, fontSize: 22),
+              ),
             ),
           ),
           Expanded(

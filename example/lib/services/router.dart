@@ -5,9 +5,7 @@ import 'package:go_router/go_router.dart';
 import '/presentation/screens/login_screen.dart';
 import '/presentation/screens/register_screen.dart';
 import '/presentation/screens/web_placeholder_screen.dart';
-
 import '/presentation/screens/main_scaffold.dart';
-
 import '/presentation/screens/home_screen.dart';
 import '/presentation/screens/chatbot_screen.dart';
 import '/presentation/screens/mypage_screen.dart';
@@ -17,13 +15,13 @@ import '/presentation/screens/clinics_screen.dart';
 import '/presentation/screens/camera_inference_screen.dart';
 
 import '/presentation/screens/doctor/d_home_screen.dart';
-import '/presentation/screens/doctor/d_alert_list_screen.dart'; // 🆕
+import '/presentation/screens/doctor/d_alert_list_screen.dart';
 
-// 의사 추가 화면 import
+// ✅ 의사 화면 중 실제로 존재하는 것만 import
 import '/presentation/screens/doctor/d_reservation_screen.dart';
-import '/presentation/screens/doctor/d_result_screen.dart';
-import '/presentation/screens/doctor/d_calendar_screen.dart';
-import '/presentation/screens/doctor/d_patient_list_screen.dart';
+// import '/presentation/screens/doctor/d_result_screen.dart';       ❌ 존재하지 않으면 주석
+// import '/presentation/screens/doctor/d_calendar_screen.dart';     ❌ 존재하지 않으면 주석
+// import '/presentation/screens/doctor/d_patient_list_screen.dart'; ❌ 존재하지 않으면 주석
 
 GoRouter createRouter(String baseUrl) {
   return GoRouter(
@@ -42,23 +40,27 @@ GoRouter createRouter(String baseUrl) {
         builder: (context, state) => const WebPlaceholderScreen(),
       ),
 
-      // ✅ 의사 홈 (기본으로 알림 리스트 포함)
+      // 의사 홈
       GoRoute(
         path: '/d_home',
         builder: (context, state) => const DAlertListScreen(),
       ),
 
-      // 의사용 추가 라우트
+      // 의사용: 예약 현황
       GoRoute(
         path: '/d_reservations',
         builder: (context, state) {
           final extraData = state.extra as Map<String, dynamic>? ?? {};
+          // ❗ DoctorReservationScreen이 userId, baseUrl을 받을 수 있도록 정의돼 있어야 함
           return DoctorReservationScreen(
             userId: extraData['userId'] ?? 'guest',
             baseUrl: extraData['baseUrl'] ?? baseUrl,
           );
         },
       ),
+
+      // ❌ 아래는 파일/클래스 없으면 주석 처리하거나 생성 필요
+      /*
       GoRoute(
         path: '/d_results',
         builder: (context, state) {
@@ -89,8 +91,8 @@ GoRouter createRouter(String baseUrl) {
           );
         },
       ),
+      */
 
-      // ✅ 하단 탭 바 있는 일반 사용자용 ShellRoute
       ShellRoute(
         builder: (context, state, child) {
           return MainScaffold(

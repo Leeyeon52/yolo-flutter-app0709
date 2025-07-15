@@ -11,7 +11,7 @@ import 'presentation/viewmodel/doctor/d_patient_viewmodel.dart';
 import 'presentation/viewmodel/doctor/d_alert_viewmodel.dart'; // 🆕
 
 void main() {
-  const String globalBaseUrl = "http://172.20.48.1:5000/api";
+  const String globalBaseUrl = "http://192.168.0.136:5000/api";
 
   runApp(
     MultiProvider(
