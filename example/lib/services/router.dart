@@ -16,9 +16,10 @@ import '/presentation/screens/camera_inference_screen.dart';
 
 import '/presentation/screens/doctor/d_home_screen.dart';
 import '/presentation/screens/doctor/d_alert_list_screen.dart';
+import '/presentation/screens/doctor/d_reservation_screen.dart';
+import '/presentation/screens/doctor/d_result_detail_screen.dart'; // 새로 추가
 
 // ✅ 의사 화면 중 실제로 존재하는 것만 import
-import '/presentation/screens/doctor/d_reservation_screen.dart';
 // import '/presentation/screens/doctor/d_result_screen.dart';       ❌ 존재하지 않으면 주석
 // import '/presentation/screens/doctor/d_calendar_screen.dart';     ❌ 존재하지 않으면 주석
 // import '/presentation/screens/doctor/d_patient_list_screen.dart'; ❌ 존재하지 않으면 주석
@@ -51,10 +52,21 @@ GoRouter createRouter(String baseUrl) {
         path: '/d_reservations',
         builder: (context, state) {
           final extraData = state.extra as Map<String, dynamic>? ?? {};
-          // ❗ DoctorReservationScreen이 userId, baseUrl을 받을 수 있도록 정의돼 있어야 함
           return DoctorReservationScreen(
             userId: extraData['userId'] ?? 'guest',
             baseUrl: extraData['baseUrl'] ?? baseUrl,
+          );
+        },
+      ),
+
+      // 상세 결과 화면 라우트 추가
+      GoRoute(
+        path: '/d_result_detail',
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return ResultDetailScreen(
+            originalImageUrl: data['originalImageUrl'] ?? '',
+            processedImageUrl: data['processedImageUrl'] ?? '',
           );
         },
       ),

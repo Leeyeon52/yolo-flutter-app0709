@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';  // 라우팅 위해 import
+
 import '../../../presentation/viewmodel/doctor/d_alert_viewmodel.dart';
 import '../../widgets/app_drawer.dart';
 
@@ -32,9 +34,11 @@ class DAlertListScreen extends StatelessWidget {
                   child: ListTile(
                     title: Text('${a.name} | ${a.description}'),
                     subtitle: Text('${a.date} (${a.statusText})'),
-                    trailing: Icon(Icons.chevron_right),
+                    trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: 상세 진료 페이지 이동
+                      context.push('/d_results', extra: {
+                        'alertId': a.id,  // Alert의 고유 id를 전달
+                      });
                     },
                   ),
                 );
